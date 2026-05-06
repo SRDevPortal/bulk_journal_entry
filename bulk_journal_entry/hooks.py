@@ -12,6 +12,7 @@ after_migrate = "bulk_journal_entry.install.after_migrate"
 doctype_js = {
 	"Bulk Journal Entry": "public/js/bulk_journal_entry.js",
 	"Payment Entry": "public/js/payment_entry.js",
+	"Patient": "public/js/patient.js",
 }
 
 fixtures = [
