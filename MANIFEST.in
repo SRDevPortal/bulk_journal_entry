@@ -1,0 +1,18 @@
+include pyproject.toml
+include README.md
+include LICENSE
+
+recursive-include bulk_journal_entry *.json
+recursive-include bulk_journal_entry *.py
+recursive-include bulk_journal_entry *.js
+recursive-include bulk_journal_entry *.css
+recursive-include bulk_journal_entry *.html
+recursive-include bulk_journal_entry *.md
+recursive-include bulk_journal_entry *.svg
+recursive-include bulk_journal_entry *.png
+recursive-include bulk_journal_entry *.jpg
+recursive-include bulk_journal_entry *.csv
+recursive-include bulk_journal_entry *.txt
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[cod]
