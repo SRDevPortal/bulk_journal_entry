@@ -12,7 +12,10 @@ after_migrate = "bulk_journal_entry.install.after_migrate"
 doctype_js = {
 	"Bulk Journal Entry": "public/js/bulk_journal_entry.js",
 	"Payment Entry": "public/js/payment_entry.js",
-	"Patient": "public/js/patient.js",
+}
+
+override_doctype_dashboards = {
+	"Patient": ["bulk_journal_entry.patient_dashboard.get_dashboard_data"],
 }
 
 fixtures = [

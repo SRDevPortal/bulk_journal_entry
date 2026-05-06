@@ -3,6 +3,7 @@ import logging
 import frappe
 
 from .setup.utils import APP_PY_MODULE, MODULE_DEF_NAME, ensure_module_def
+from .setup.custom_fields import setup_custom_fields
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ def before_install():
 def after_install():
 	logger.info("===== Bulk Journal Entry: After Install Started =====")
 	_ensure_module()
+	setup_custom_fields()
 	frappe.clear_cache()
 	frappe.db.commit()
 	logger.info("===== Bulk Journal Entry: After Install Completed =====")
@@ -27,6 +29,7 @@ def after_install():
 def after_migrate():
 	logger.info("===== Bulk Journal Entry: After Migrate Started =====")
 	_ensure_module()
+	setup_custom_fields()
 	frappe.clear_cache()
 	frappe.db.commit()
 	logger.info("===== Bulk Journal Entry: After Migrate Completed =====")

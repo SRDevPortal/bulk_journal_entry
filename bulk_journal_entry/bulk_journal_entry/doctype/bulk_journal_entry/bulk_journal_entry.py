@@ -106,6 +106,13 @@ class BulkJournalEntry(Document):
 		if not settlement_items:
 			frappe.throw(frappe._("No settlement rows found to create Journal Entry."))
 
+		for row in settlement_items:
+			row["patient"] = self.get_patient_for_customer(row["customer"])
+
+		patients = {row["patient"] for row in settlement_items if row.get("patient")}
+		if len(patients) == 1:
+			je.patient = patients.pop()
+
 		je.append(
 			"accounts",
 			self.get_journal_account_row(
@@ -120,6 +127,7 @@ class BulkJournalEntry(Document):
 				account=self.receivable_account,
 				party_type="Customer",
 				party=row["customer"],
+				patient=row.get("patient"),
 				credit_in_account_currency=row["amount"],
 				is_advance="No",
 				reference_type="Sales Invoice",
@@ -148,6 +156,7 @@ class BulkJournalEntry(Document):
 		row = {
 			"party_type": None,
 			"party": None,
+			"patient": None,
 			"reference_type": None,
 			"reference_name": None,
 			"reference_detail_no": None,
@@ -173,3 +182,9 @@ class BulkJournalEntry(Document):
 			fields=["name", "idx", "sales_invoice", "customer", "amount", "remarks"],
 			order_by="idx",
 		)
+
+	def get_patient_for_customer(self, customer):
+		if not customer:
+			return None
+
+		return frappe.db.get_value("Patient", {"customer": customer}, "name")
