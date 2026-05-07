@@ -33,7 +33,7 @@ def get_sales_invoice_data(invoice_no):
 
 def create_journal_entry_on_submit(doc, method=None):
 	_prepare_rows_for_processing(doc)
-	enqueue_journal_entry_batches(doc.name)
+	enqueue_journal_entry_batches(doc.name, notify_user=frappe.session.user)
 	logger.info(
 		"Bulk Journal Entry %s submitted by %s; dispatching batches of %s rows",
 		doc.name,
@@ -43,7 +43,7 @@ def create_journal_entry_on_submit(doc, method=None):
 	frappe.msgprint(f"Bulk Journal Entry processing started in batches of {BATCH_SIZE} rows.")
 
 
-def enqueue_journal_entry_batches(docname, row_names=None):
+def enqueue_journal_entry_batches(docname, row_names=None, notify_user=None):
 	doc = frappe.get_doc("Bulk Journal Entry", docname)
 	rows = _get_rows_for_batches(doc, row_names=row_names)
 
@@ -79,6 +79,7 @@ def enqueue_journal_entry_batches(docname, row_names=None):
 			end_idx=batch_rows[-1].idx,
 			batch_no=batch_no,
 			total_batches=total_batches,
+			notify_user=notify_user,
 			queue=BATCH_QUEUE,
 			timeout=BATCH_TIMEOUT,
 			enqueue_after_commit=True,
@@ -94,6 +95,7 @@ def process_bulk_journal_entry_batch(
 	end_idx=None,
 	batch_no=None,
 	total_batches=None,
+	notify_user=None,
 ):
 	doc = frappe.get_doc("Bulk Journal Entry", docname)
 	rows = _get_batch_rows(doc, row_names=row_names, start_idx=start_idx, end_idx=end_idx)
@@ -160,7 +162,7 @@ def process_bulk_journal_entry_batch(
 		batch_no or "-",
 		total_batches or "-",
 	)
-	_publish_batch_progress(docname, batch_no, total_batches)
+	_publish_batch_progress(docname, batch_no, total_batches, notify_user=notify_user)
 
 
 @frappe.whitelist()
@@ -185,7 +187,7 @@ def retry_failed_rows(docname):
 			update_modified=False,
 		)
 
-	enqueue_journal_entry_batches(docname, row_names=failed_rows)
+	enqueue_journal_entry_batches(docname, row_names=failed_rows, notify_user=frappe.session.user)
 	logger.info("Bulk Journal Entry %s retry started for %s failed rows", docname, len(failed_rows))
 	frappe.msgprint(f"Retry started for {len(failed_rows)} failed rows.")
 
@@ -374,13 +376,14 @@ def _update_summary_counts(docname):
 	)
 
 
-def _publish_batch_progress(docname, batch_no=None, total_batches=None):
+def _publish_batch_progress(docname, batch_no=None, total_batches=None, notify_user=None):
 	batch_label = ""
 	if batch_no and total_batches:
 		batch_label = f" Batch {batch_no} of {total_batches} completed."
 
-	frappe.publish_realtime(
-		"msgprint",
-		{"message": f"Bulk Journal Entry {docname}:{batch_label} Progress updated."},
-		user=frappe.session.user,
-	)
+	if notify_user:
+		frappe.publish_realtime(
+			"msgprint",
+			{"message": f"Bulk Journal Entry {docname}:{batch_label} Progress updated."},
+			user=notify_user,
+		)
