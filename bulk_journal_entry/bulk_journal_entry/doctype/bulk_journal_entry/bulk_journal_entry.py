@@ -2,6 +2,8 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import flt
 
+from bulk_journal_entry.setup.utils import has_doctype
+
 
 class BulkJournalEntry(Document):
 	def validate(self):
@@ -184,7 +186,7 @@ class BulkJournalEntry(Document):
 		)
 
 	def get_patient_for_customer(self, customer):
-		if not customer:
+		if not customer or not has_doctype("Patient"):
 			return None
 
 		return frappe.db.get_value("Patient", {"customer": customer}, "name")
